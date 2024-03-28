@@ -1,3 +1,0 @@
-/Users/tylerlericos/Vscode/Engine/build/CMakeFiles/Engine.dir
-/Users/tylerlericos/Vscode/Engine/build/CMakeFiles/edit_cache.dir
-/Users/tylerlericos/Vscode/Engine/build/CMakeFiles/rebuild_cache.dir
