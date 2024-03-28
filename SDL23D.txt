@@ -1,0 +1,165 @@
+/**
+ * 3D Emi Engine
+ * @Tyler Lericos
+ * March 27th 2024
+ * Demo 1
+*/
+
+
+#include <iostream>
+#include <SDL2/SDL.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+
+
+
+// Window dimensions
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
+
+// Cube position
+float cubeX = 0.0f;
+float cubeY = 0.0f;
+
+// Camera position
+float cameraX = 5.0f;
+float cameraY = 5.0f;
+float cameraZ = 5.0f;
+
+// Time-related variables
+Uint32 lastTime = 0;
+const float movementSpeed = 2.0f; // Adjust as needed
+
+// Function to set up OpenGL
+void initGL() {
+    // Set up perspective projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (double)WINDOW_WIDTH / (double)WINDOW_HEIGHT, 1.0, 100.0);
+
+    // Set up modelview matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+// Function to draw a cube
+void drawCube() {
+    glBegin(GL_QUADS);
+    // Front face
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(-0.5f + cubeX, -0.5f + cubeY, 0.5f);  // Bottom-left
+    glVertex3f(0.5f + cubeX, -0.5f + cubeY, 0.5f);   // Bottom-right
+    glVertex3f(0.5f + cubeX, 0.5f + cubeY, 0.5f);    // Top-right
+    glVertex3f(-0.5f + cubeX, 0.5f + cubeY, 0.5f);   // Top-left
+    glEnd();
+}
+
+// Function to draw a grid
+void drawGrid() {
+    glLineWidth(1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_LINES);
+    for (float i = -10.0f; i <= 10.0f; i += 1.0f) {
+        glVertex3f(i, -10.0f, 0.0f);
+        glVertex3f(i, 10.0f, 0.0f);
+        glVertex3f(-10.0f, i, 0.0f);
+        glVertex3f(10.0f, i, 0.0f);
+    }
+    glEnd();
+}
+
+// Function to update cube position based on elapsed time
+void update(float deltaTime) {
+    const Uint8 *keyboardState = SDL_GetKeyboardState(NULL);
+    if (keyboardState[SDL_SCANCODE_LEFT]) {
+        cubeX -= movementSpeed * deltaTime;
+    }
+    if (keyboardState[SDL_SCANCODE_RIGHT]) {
+        cubeX += movementSpeed * deltaTime;
+    }
+    if (keyboardState[SDL_SCANCODE_UP]) {
+        cubeY += movementSpeed * deltaTime;
+    }
+    if (keyboardState[SDL_SCANCODE_DOWN]) {
+        cubeY -= movementSpeed * deltaTime;
+    }
+
+    // Update camera position to follow the cube
+    cameraX = cubeX + 5.0f;
+    cameraY = cubeY + 5.0f;
+    cameraZ = 5.0f; // Adjust as needed
+}
+
+int main(int argc, char* argv[]) {
+    // Initialize SDL and OpenGL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("OpenGL Cube", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    if (!window) {
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+    if (!context) {
+        std::cerr << "Failed to create OpenGL context: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    // Enable depth testing for 3D rendering
+    glEnable(GL_DEPTH_TEST);
+
+    // Set up OpenGL
+    initGL();
+
+    // Main loop
+    bool quit = false;
+    SDL_Event event;
+    while (!quit) {
+        // Calculate delta time
+        Uint32 currentTime = SDL_GetTicks();
+        float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
+        lastTime = currentTime;
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
+
+        // Update cube position based on input and elapsed time
+        update(deltaTime);
+
+        // Clear the screen and depth buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Reset transformations
+        glLoadIdentity();
+
+        // Set the camera
+        gluLookAt(cameraX, cameraY, cameraZ, cubeX, cubeY, 0.0f, 0.0f, 0.0f, 1.0f);
+
+        // Draw the grid
+        drawGrid();
+
+        // Draw the cube
+        drawCube();
+
+        // Swap buffers
+        SDL_GL_SwapWindow(window);
+    }
+
+    // Cleanup
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
+}
+

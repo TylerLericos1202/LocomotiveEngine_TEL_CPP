@@ -1,0 +1,4 @@
+To Do List:
+
+1. Get Assimp Working
+2. Take all classes and store them elsewhere
